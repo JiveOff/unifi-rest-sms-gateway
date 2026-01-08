@@ -134,3 +134,10 @@ ws.onmessage = (event) => {
 ## Web UI 
 
 ![Web Interface Screenshot](docs/web-ui.png)
+
+When `ENABLE_WEB_UI` is set to `true`, a simple web interface is available at the root path (`/`). It is protected by the same API key as the REST API.
+
+## Acknowledgments
+
+- Inspired by [CppBunny/unifi_sms_gateway](https://github.com/CppBunny/unifi_sms_gateway)
+- Developed with assistance from GitHub Copilot (Claude Sonnet 4.5)
