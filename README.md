@@ -9,7 +9,7 @@ This project is heavily inspired by [CppBunny/unifi_sms_gateway](https://github.
 - Send SMS messages via REST API
 - Get received SMS messages via REST API
 - Real-time SMS monitoring via WebSocket
-- SIM card and LTE connection info retrieval
+- SIM card info retrieval
 - Simple web interface to interact with the API
 
 ## Requirements
