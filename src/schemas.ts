@@ -31,15 +31,32 @@ export const MessageIndexParamsSchema = z.object({
 export type MessageIndexParams = z.infer<typeof MessageIndexParamsSchema>;
 
 export const SendSmsSchema = z.object({
-  number: z.string()
+  number: z
+    .string()
     .min(1, "Phone number is required")
     .regex(/^[0-9+\-\s()]+$/, "Phone number contains invalid characters"),
-  content: z.string()
+  content: z
+    .string()
     .min(1, "Message content is required")
     .refine(
       (val) => isGsm7Valid(val),
-      "Content must only contain characters from GSM 7-bit alphabet (ISO8859-15)"
+      "Content must only contain characters from GSM 7-bit alphabet (ISO8859-15)",
     ),
 });
 
 export type SendSms = z.infer<typeof SendSmsSchema>;
+
+// Response schemas
+export const MessageCountResponseSchema = z.object({
+  count: z.number(),
+});
+
+export const ClearMessagesResponseSchema = z.object({
+  success: z.boolean(),
+  cleared: z.number(),
+});
+
+export const SendMessageResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});

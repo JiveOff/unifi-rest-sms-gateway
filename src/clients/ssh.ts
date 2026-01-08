@@ -38,7 +38,7 @@ const setupSession = async () => {
   // Verify nested SSH connection to the device is working
   consola.info("Verifying nested SSH to device...");
   const deviceTest = await session.execCommand(
-    "ssh -y root@$(cat /var/run/topipv6) 'echo device_ready'"
+    "ssh -y root@$(cat /var/run/topipv6) 'echo device_ready'",
   );
   if (deviceTest.code !== 0 || !deviceTest.stdout.includes("device_ready")) {
     consola.error("Nested SSH to device is not responding correctly.");
@@ -47,9 +47,11 @@ const setupSession = async () => {
 
   const executeCommand = async (command: string) => {
     // Only redact parameters for 'sms send' commands to protect phone numbers and message content
-    const logCommand = appEnv.ENABLE_SENSITIVE_LOGS 
-      ? command 
-      : (command.startsWith('sms send ') ? 'sms send [REDACTED]' : command);
+    const logCommand = appEnv.ENABLE_SENSITIVE_LOGS
+      ? command
+      : command.startsWith("sms send ")
+        ? "sms send [REDACTED]"
+        : command;
     consola.info(`Executing USB command: ${logCommand}`);
     const res = await session.execCommand(
       `ssh -y root@$(cat /var/run/topipv6) '/legato/systems/current/bin/cm ${command}'`,
@@ -66,12 +68,14 @@ const setupSession = async () => {
 
   const executeStreamingCommand = async function* (command: string) {
     // Only redact parameters for 'sms send' commands to protect phone numbers and message content
-    const logCommand = appEnv.ENABLE_SENSITIVE_LOGS 
-      ? command 
-      : (command.startsWith('sms send ') ? 'sms send [REDACTED]' : command);
+    const logCommand = appEnv.ENABLE_SENSITIVE_LOGS
+      ? command
+      : command.startsWith("sms send ")
+        ? "sms send [REDACTED]"
+        : command;
     consola.info(`Executing streaming USB command: ${logCommand}`);
     const fullCommand = `ssh -y root@$(cat /var/run/topipv6) '/legato/systems/current/bin/cm ${command}'`;
-    
+
     const chunks: string[] = [];
     const errors: string[] = [];
     let streamEnded = false;
@@ -80,7 +84,7 @@ const setupSession = async () => {
     // Use exec with stream mode
     const sshConnection = session.connection;
     if (!sshConnection) {
-      throw new Error('SSH connection not available');
+      throw new Error("SSH connection not available");
     }
 
     sshConnection.exec(fullCommand, (err: Error | undefined, stream: any) => {
@@ -90,23 +94,23 @@ const setupSession = async () => {
         return;
       }
 
-      stream.on('data', (chunk: Buffer) => {
-        const data = chunk.toString('utf-8');
+      stream.on("data", (chunk: Buffer) => {
+        const data = chunk.toString("utf-8");
         chunks.push(data);
       });
 
-      stream.stderr.on('data', (chunk: Buffer) => {
-        const error = chunk.toString('utf-8');
+      stream.stderr.on("data", (chunk: Buffer) => {
+        const error = chunk.toString("utf-8");
         consola.error(`Error in streaming command "${logCommand}":`, error);
         errors.push(error);
       });
 
-      stream.on('close', () => {
+      stream.on("close", () => {
         consola.info(`Stream closed for command: ${logCommand}`);
         streamEnded = true;
       });
 
-      stream.on('error', (error: Error) => {
+      stream.on("error", (error: Error) => {
         consola.error(`Stream error for command "${logCommand}":`, error);
         streamError = error;
         streamEnded = true;
@@ -131,7 +135,7 @@ const setupSession = async () => {
         }
       } else {
         // Wait a bit before checking again
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
     }
   };
@@ -139,21 +143,27 @@ const setupSession = async () => {
   consola.success("SSH session established and usb0 interface is up.");
 
   // Monitor SSH connection and crash if it drops
-  session.connection?.on('close', () => {
+  session.connection?.on("close", () => {
     consola.error("❌ SSH connection closed unexpectedly!");
-    consola.error("Application cannot function without SSH connection. Exiting...");
+    consola.error(
+      "Application cannot function without SSH connection. Exiting...",
+    );
     process.exit(1);
   });
 
-  session.connection?.on('end', () => {
+  session.connection?.on("end", () => {
     consola.error("❌ SSH connection ended!");
-    consola.error("Application cannot function without SSH connection. Exiting...");
+    consola.error(
+      "Application cannot function without SSH connection. Exiting...",
+    );
     process.exit(1);
   });
 
-  session.connection?.on('error', (error: Error) => {
+  session.connection?.on("error", (error: Error) => {
     consola.error("❌ SSH connection error:", error);
-    consola.error("Application cannot function without SSH connection. Exiting...");
+    consola.error(
+      "Application cannot function without SSH connection. Exiting...",
+    );
     process.exit(1);
   });
 

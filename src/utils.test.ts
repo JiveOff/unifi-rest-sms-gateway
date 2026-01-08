@@ -13,7 +13,7 @@ describe("parseSmsListOutput", () => {
     const result = parseSmsListOutput(input);
 
     expect(result).toHaveLength(1);
-    
+
     const message = result[0]!;
     expect(message.index).toBe(2);
     expect(message.type).toBe("LE_SMS_TYPE_RX");
@@ -42,13 +42,13 @@ describe("parseSmsListOutput", () => {
     const result = parseSmsListOutput(input);
 
     expect(result).toHaveLength(2);
-    
+
     const msg0 = result[0]!;
     expect(msg0.index).toBe(0);
     expect(msg0.sender).toBe("+1111111111");
     expect(msg0.text).toBe("Hello");
     expect(msg0.textLength).toBe(7);
-    
+
     const msg1 = result[1]!;
     expect(msg1.index).toBe(1);
     expect(msg1.sender).toBe("+2222222222");

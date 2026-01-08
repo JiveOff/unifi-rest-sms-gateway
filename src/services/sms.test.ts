@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { sanitizeSmsContent, parseRemovedSmsCount, sanitizePhoneNumber } from "../utils";
+import {
+  sanitizeSmsContent,
+  parseRemovedSmsCount,
+  sanitizePhoneNumber,
+} from "../utils";
 
 describe("SMS message parsing", () => {
   test("should parse 'Removed X SMS messages' output", () => {
@@ -56,7 +60,11 @@ describe("Phone number sanitization", () => {
   test("should remove dangerous characters", () => {
     const testCases = [
       { input: "+123; rm -rf /", expected: "+123  - " },
-      { input: "+123|echo test", expected: "+123 ", comment: "pipe and text removed, space from 'echo test' remains" },
+      {
+        input: "+123|echo test",
+        expected: "+123 ",
+        comment: "pipe and text removed, space from 'echo test' remains",
+      },
       { input: "+123$USER", expected: "+123" },
       { input: "+123`whoami`", expected: "+123" },
       { input: "+123&sudo", expected: "+123" },
@@ -100,9 +108,9 @@ describe("Content escaping", () => {
   });
 
   test("should handle multiple escape sequences", () => {
-    const content = "Test: $100 \"quote\" `code` C:\\path";
+    const content = 'Test: $100 "quote" `code` C:\\path';
     const escaped = sanitizeSmsContent(content);
-    expect(escaped).toBe("Test: \\$100 \\\"quote\\\" \\`code\\` C:\\\\path");
+    expect(escaped).toBe('Test: \\$100 \\"quote\\" \\`code\\` C:\\\\path');
   });
 
   test("should preserve spaces", () => {

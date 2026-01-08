@@ -69,3 +69,56 @@ If `API_KEY` is not configured, authentication is disabled (not recommended for 
 
 ## API Documentation
 
+### REST Endpoints
+
+All endpoints require `X-API-Key` header when authentication is enabled.
+
+| Method | Endpoint | Description | Response |
+|--------|----------|-------------|----------|
+| `GET` | `/info` | Get SIM card and LTE connection info | `SimInfo` object |
+| `GET` | `/messages` | Get all SMS messages | Array of `SmsMessage` |
+| `GET` | `/messages/count` | Get total message count | `{ count: number }` |
+| `GET` | `/messages/latest` | Get most recent SMS | `SmsMessage` object |
+| `GET` | `/messages/:index` | Get SMS by index (0-based) | `SmsMessage` object |
+| `DELETE` | `/messages` | Delete all SMS messages | `{ success: true, cleared: number }` |
+| `POST` | `/messages` | Send SMS | `{ success: true, message: string }` |
+
+**POST /messages body:**
+```json
+{
+  "number": "+1234567890",
+  "content": "Your message here"
+}
+```
+
+**SmsMessage schema:**
+```json
+{
+  "index": 0,
+  "type": "LE_SMS_TYPE_RX",
+  "sender": "+1234567890",
+  "timestamp": "2026-01-09T12:34:56+01:00",
+  "format": "LE_SMS_FORMAT_TEXT",
+  "text": "Message content",
+  "textLength": 15
+}
+```
+
+### WebSocket
+
+**Endpoint:** `ws://localhost:3000/messages/monitor`
+
+Real-time SMS monitoring. Connect and authenticate, then receive new SMS messages as they arrive.
+
+**Authentication flow:**
+```javascript
+const ws = new WebSocket('ws://localhost:3000/messages/monitor');
+ws.onopen = () => {
+  ws.send(JSON.stringify({ type: 'auth', apiKey: 'your-key' }));
+};
+ws.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+  // Receives SmsMessage objects or auth responses
+};
+```
+

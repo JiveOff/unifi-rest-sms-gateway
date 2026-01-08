@@ -1,6 +1,3 @@
 {
-    "recommendations": [
-        "biomejs.biome",
-        "humao.rest-client"
-    ]
+  "recommendations": ["biomejs.biome", "humao.rest-client"]
 }
