@@ -4,6 +4,14 @@ This is a simple REST gateway to use the SMS functionality of the UniFi LTE Back
 
 This project is heavily inspired by [CppBunny/unifi_sms_gateway](https://github.com/CppBunny/unifi_sms_gateway) but with a REST API interface and written in TypeScript using Bun.
 
+## Features
+
+- Send SMS messages via REST API
+- Get received SMS messages via REST API
+- Real-time SMS monitoring via WebSocket
+- SIM card and LTE connection info retrieval
+- Simple web interface to interact with the API
+
 ## Requirements
 
 - A [UniFi LTE Backup Pro](https://eu.store.ui.com/eu/en/category/internet-solutions/collections/unifi-lte-backup/products/u-lte-pro) device
@@ -91,6 +99,7 @@ All endpoints require `X-API-Key` header when authentication is enabled.
 }
 ```
 
+
 **SmsMessage schema:**
 ```json
 {
@@ -122,3 +131,6 @@ ws.onmessage = (event) => {
 };
 ```
 
+## Web UI 
+
+![Web Interface Screenshot](docs/web-ui.png)
