@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  sms-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: unifi-sms-gateway
+    restart: unless-stopped
+    environment:
+      - SSH_HOST=${SSH_HOST}
+      - SSH_USERNAME=${SSH_USERNAME}
+      - SSH_PASSWORD=${SSH_PASSWORD}
+      - API_KEY=${API_KEY}
+      - ENABLE_WEB_UI=${ENABLE_WEB_UI:-true}
+      - ENABLE_SENSITIVE_LOGS=${ENABLE_SENSITIVE_LOGS:-false}
+      - PORT=${PORT:-3000}
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    networks:
+      - sms-gateway-network
+
+networks:
+  sms-gateway-network:
+    driver: bridge

@@ -1,0 +1,43 @@
+@baseUrl = http://localhost:3000
+@index = 0
+@apiKey = key123
+
+### Get SIM info
+GET {{baseUrl}}/info
+Accept: application/json
+X-API-Key: {{apiKey}}
+
+### Get all messages
+GET {{baseUrl}}/messages
+Accept: application/json
+X-API-Key: {{apiKey}}
+
+### Get latest message
+GET {{baseUrl}}/messages/latest
+Accept: application/json
+X-API-Key: {{apiKey}}
+
+### Get message by index (use {{index}})
+GET {{baseUrl}}/messages/{{index}}
+Accept: application/json
+X-API-Key: {{apiKey}}
+
+### Get message count
+GET {{baseUrl}}/messages/count
+Accept: application/json
+X-API-Key: {{apiKey}}
+
+### Delete all messages
+DELETE {{baseUrl}}/messages
+Accept: application/json
+X-API-Key: {{apiKey}}
+
+### Send SMS message
+POST {{baseUrl}}/messages
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "number": "+1234567890",
+  "content": "Hello, this is a test message!"
+}

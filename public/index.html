@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Monitor - Real-time WebSocket</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1a1a1a;
+            color: #e5e7eb;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .left-panel,
+        .right-panel {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .left-panel {
+            background: #1f1f1f;
+            border-right: 1px solid #333;
+        }
+
+        .right-panel {
+            background: #1a1a1a;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #e5e7eb;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        h2 {
+            color: #e5e7eb;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .header p {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .status.connected {
+            background: #064e3b;
+            color: #10b981;
+        }
+
+        .status.disconnected {
+            background: #7f1d1d;
+            color: #ef4444;
+        }
+
+        .status.connecting {
+            background: #78350f;
+            color: #f59e0b;
+        }
+
+        .controls {
+            margin-top: 15px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin-right: 10px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+        }
+
+        .messages-container {
+            background: #1f1f1f;
+            border-radius: 8px;
+            padding: 20px;
+            max-height: calc(100vh - 300px);
+            overflow-y: auto;
+        }
+
+        .message {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 16px;
+            animation: slideIn 0.3s ease-out;
+            max-width: 85%;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-bubble {
+            background: #2563eb;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            word-wrap: break-word;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .message-sender {
+            font-weight: 600;
+            color: #60a5fa;
+        }
+
+        .message-time {
+            color: #6b7280;
+            font-size: 11px;
+        }
+
+        .message-text {
+            font-size: 15px;
+            line-height: 1.4;
+            word-wrap: break-word;
+            margin-bottom: 4px;
+        }
+
+        .message-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 6px;
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        .message-meta {
+            font-size: 10px;
+            color: #6b7280;
+            margin-top: 4px;
+            padding: 0 4px;
+        }
+
+        .message-meta span {
+            margin-right: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 40px;
+            color: #6b7280;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 15px;
+            opacity: 0.3;
+            color: #4b5563;
+        }
+
+        .error .message-bubble {
+            background: #7f1d1d;
+            border-bottom-left-radius: 4px;
+        }
+
+        .error .message-sender {
+            color: #fca5a5;
+        }
+
+        .stats {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .stats span {
+            background: #f3f4f6;
+            padding: 4px 10px;
+            border-radius: 4px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #d1d5db;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            background: #2a2a2a;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #e5e7eb;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #2d2d2d;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        #sendStatus {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+        }
+
+        #sendStatus.success {
+            display: block;
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        #sendStatus.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <div class="header">
+                <h1>📤 Send SMS</h1>
+                <p>Send messages to any phone number</p>
+            </div>
+
+            <form id="smsForm" onsubmit="sendSMS(event)">
+                <div class="form-group">
+                    <label for="phoneNumber">Phone Number</label>
+                    <input 
+                        type="tel" 
+                        id="phoneNumber" 
+                        placeholder="+1234567890" 
+                        pattern="[0-9+\-\s()]+" 
+                        required
+                    />
+                </div>
+                <div class="form-group">
+                    <label for="messageContent">Message</label>
+                    <textarea 
+                        id="messageContent" 
+                        placeholder="Type your message..." 
+                        maxlength="160" 
+                        rows="4"
+                        required
+                    ></textarea>
+                    <div class="char-count">
+                        <span id="charCount">0</span>/160 characters
+                    </div>
+                </div>
+                <button type="submit" id="sendBtn">📨 Send Message</button>
+                <div id="sendStatus"></div>
+            </form>
+        </div>
+
+        <div class="right-panel">
+            <div class="header">
+                <h1>📱 SMS Monitor</h1>
+                <p>Real-time message monitoring</p>
+                <div class="stats">
+                    <span id="messageCount">Messages: 0</span>
+                    <span id="connectionTime">Connected: --</span>
+                </div>
+                <div style="margin-top: 12px;">
+                    <span class="status" id="status">Disconnected</span>
+                </div>
+                <div class="controls">
+                    <button id="connectBtn" onclick="connect()">Connect</button>
+                    <button id="disconnectBtn" onclick="disconnect()" disabled>Disconnect</button>
+                    <button onclick="clearMessages()">Clear</button>
+                    <button onclick="resetApiKey()" style="background: #dc2626;">Reset API Key</button>
+                </div>
+            </div>
+
+            <div class="messages-container">
+                <div id="messageList">
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        <p>No messages yet</p>
+                        <p style="font-size: 12px; margin-top: 8px; opacity: 0.6;">Waiting for incoming SMS...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let messageCount = 0;
+        let connectionStartTime = null;
+        let connectionTimeInterval = null;
+        let apiKey = localStorage.getItem('apiKey') || '';
+
+        const statusEl = document.getElementById('status');
+        const messageListEl = document.getElementById('messageList');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const messageCountEl = document.getElementById('messageCount');
+        const connectionTimeEl = document.getElementById('connectionTime');
+
+        // Prompt for API key on first load
+        if (!apiKey) {
+            const inputKey = prompt('Enter API Key (leave empty if not required):');
+            if (inputKey) {
+                apiKey = inputKey;
+                localStorage.setItem('apiKey', apiKey);
+            }
+        }
+
+        function updateStatus(status, text) {
+            statusEl.className = `status ${status}`;
+            statusEl.textContent = text;
+        }
+
+        function updateConnectionTime() {
+            if (connectionStartTime) {
+                const elapsed = Math.floor((Date.now() - connectionStartTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                connectionTimeEl.textContent = `Connected: ${minutes}m ${seconds}s`;
+            } else {
+                connectionTimeEl.textContent = 'Connected: --';
+            }
+        }
+
+        function connect() {
+            if (ws) {
+                return;
+            }
+
+            updateStatus('connecting', 'Connecting...');
+            connectBtn.disabled = true;
+
+            try {
+                ws = new WebSocket('ws://localhost:3000/messages/monitor');
+
+                ws.onopen = () => {
+                    updateStatus('connecting', 'Authenticating...');
+                    
+                    // Send authentication message if API key is set
+                    if (apiKey) {
+                        ws.send(JSON.stringify({
+                            type: 'auth',
+                            apiKey: apiKey
+                        }));
+                    }
+                };
+
+                ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        
+                        // Handle authentication responses
+                        if (data.type === 'auth_required') {
+                            console.log('Authentication required');
+                            return;
+                        }
+                        
+                        if (data.type === 'auth_success') {
+                            updateStatus('connected', 'Connected');
+                            disconnectBtn.disabled = false;
+                            connectionStartTime = Date.now();
+                            connectionTimeInterval = setInterval(updateConnectionTime, 1000);
+                            console.log('Authenticated successfully');
+                            return;
+                        }
+                        
+                        if (data.type === 'auth_failed') {
+                            updateStatus('disconnected', 'Authentication Failed');
+                            ws.close();
+                            alert('Authentication failed. Please check your API key.');
+                            resetApiKey();
+                            return;
+                        }
+                        
+                        // Handle regular messages
+                        if (data.error) {
+                            addErrorMessage(data);
+                        } else if (data.sender) {
+                            addMessage(data);
+                        }
+                    } catch (error) {
+                        console.error('Failed to parse message:', error);
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    updateStatus('disconnected', 'Error');
+                };
+
+                ws.onclose = () => {
+                    updateStatus('disconnected', 'Disconnected');
+                    connectBtn.disabled = false;
+                    disconnectBtn.disabled = true;
+                    ws = null;
+                    connectionStartTime = null;
+                    if (connectionTimeInterval) {
+                        clearInterval(connectionTimeInterval);
+                        connectionTimeInterval = null;
+                    }
+                    updateConnectionTime();
+                    console.log('WebSocket disconnected');
+                };
+            } catch (error) {
+                console.error('Failed to connect:', error);
+                updateStatus('disconnected', 'Failed to connect');
+                connectBtn.disabled = false;
+            }
+        }
+
+        function disconnect() {
+            if (ws) {
+                ws.close();
+            }
+        }
+
+        function addMessage(message) {
+            // Remove empty state if present
+            const emptyState = messageListEl.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+
+            messageCount++;
+            messageCountEl.textContent = `Messages: ${messageCount}`;
+
+            const messageEl = document.createElement('div');
+            messageEl.className = 'message';
+            
+            const timestamp = new Date(message.timestamp);
+            const timeString = timestamp.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit'
+            });
+
+            messageEl.innerHTML = `
+                <div class="message-header">
+                    <span class="message-sender">${escapeHtml(message.sender)}</span>
+                    <span class="message-time">${timeString}</span>
+                </div>
+                <div class="message-bubble">
+                    <div class="message-text">${escapeHtml(message.text)}</div>
+                </div>
+                <div class="message-meta">
+                    <span>#${message.index}</span>
+                    <span>${message.format}</span>
+                </div>
+            `;
+
+            // Add to top of list
+            messageListEl.insertBefore(messageEl, messageListEl.firstChild);
+        }
+
+        function addErrorMessage(error) {
+            const messageEl = document.createElement('div');
+            messageEl.className = 'message error';
+            const timeString = new Date().toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit'
+            });
+            messageEl.innerHTML = `
+                <div class="message-header">
+                    <span class="message-sender">⚠️ Error</span>
+                    <span class="message-time">${timeString}</span>
+                </div>
+                <div class="message-bubble">
+                    <div class="message-text">${escapeHtml(error.error || 'Unknown error')}</div>
+                    ${error.details ? `<div style="margin-top: 8px; font-size: 12px; opacity: 0.8;">${escapeHtml(error.details)}</div>` : ''}
+                </div>
+            `;
+
+            messageListEl.insertBefore(messageEl, messageListEl.firstChild);
+        }
+
+        function clearMessages() {
+            messageListEl.innerHTML = `
+                <div class="empty-state">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                    <p>No messages yet. Waiting for incoming SMS...</p>
+                </div>
+            `;
+            messageCount = 0;
+            messageCountEl.textContent = 'Messages: 0';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Auto-connect on load
+        window.addEventListener('load', () => {
+            connect();
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (ws) {
+                ws.close();
+            }
+        });
+
+        // Character counter for SMS form
+        const messageContent = document.getElementById('messageContent');
+        const charCount = document.getElementById('charCount');
+        
+        messageContent?.addEventListener('input', () => {
+            const length = messageContent.value.length;
+            charCount.textContent = length.toString();
+            
+            // Change color if approaching limit
+            if (length > 140) {
+                charCount.style.color = '#ef4444';
+            } else if (length > 120) {
+                charCount.style.color = '#f59e0b';
+            } else {
+                charCount.style.color = '#6b7280';
+            }
+        });
+
+        // Send SMS function
+        async function sendSMS(event) {
+            event.preventDefault();
+            
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const content = document.getElementById('messageContent').value;
+            const sendBtn = document.getElementById('sendBtn');
+            const sendStatus = document.getElementById('sendStatus');
+            
+            // Disable button during send
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending...';
+            sendStatus.style.display = 'none';
+            
+            try {
+                const headers = {
+                    'Content-Type': 'application/json',
+                };
+                
+                // Add API key to headers if available
+                if (apiKey) {
+                    headers['X-API-Key'] = apiKey;
+                }
+                
+                const response = await fetch('/messages', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({
+                        number: phoneNumber,
+                        content: content
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    sendStatus.className = 'success';
+                    sendStatus.textContent = '✓ SMS sent successfully!';
+                    sendStatus.style.display = 'block';
+                    
+                    // Clear form
+                    document.getElementById('smsForm').reset();
+                    charCount.textContent = '0';
+                    charCount.style.color = '#6b7280';
+                } else {
+                    throw new Error(result.message || 'Failed to send SMS');
+                }
+            } catch (error) {
+                sendStatus.className = 'error';
+                sendStatus.textContent = '✗ Error: ' + error.message;
+                sendStatus.style.display = 'block';
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send SMS';
+                
+                // Hide status after 5 seconds
+                setTimeout(() => {
+                    sendStatus.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function resetApiKey() {
+            if (confirm('Are you sure you want to reset the API key? You will need to enter it again.')) {
+                localStorage.removeItem('apiKey');
+                alert('API key cleared. The page will reload.');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>

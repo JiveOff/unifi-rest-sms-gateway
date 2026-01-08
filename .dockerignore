@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+bun.lockb
+
+# Development files
+*.test.ts
+*.test.js
+**/*.test.ts
+**/*.test.js
+
+# Git
+.git/
+.gitignore
+.github/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Documentation
+README.md
+docs/
+
+# Build artifacts
+dist/
+build/
+*.log
+
+# macOS
+.DS_Store
+
+# HTTP requests
+requests.http
+*.http

@@ -1,10 +1,9 @@
-import { type SimInfo, SimInfoSchema } from "./schemas";
-import { session } from "./ssh";
+import { session } from "../clients/ssh";
+import { type SimInfo, SimInfoSchema } from "../schemas";
 
 export const getSimInfo = async (): Promise<SimInfo> => {
   const simCommand = await session.executeCommand(`sim info`);
 
-  // Parse the output into an object
   const lines = simCommand.trim().split("\n");
   const rawData: Record<string, string> = {};
 
@@ -17,7 +16,6 @@ export const getSimInfo = async (): Promise<SimInfo> => {
     rawData[key] = value;
   }
 
-  // Map to camelCase and validate with Zod schema
   const simData = {
     type: rawData["Type"],
     iccid: rawData["ICCID"],
