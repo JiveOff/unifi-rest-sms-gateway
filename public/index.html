@@ -419,14 +419,16 @@
                 ws = new WebSocket(`${wsProtocol}//${location.host}/ws`);
 
                 ws.onopen = () => {
-                    updateStatus('connecting', 'Authenticating...');
-                    
                     // Send authentication message if API key is set
                     if (apiKey) {
+                        updateStatus('connecting', 'Authenticating...');
+                    
                         ws.send(JSON.stringify({
                             type: 'auth',
                             apiKey: apiKey
                         }));
+                    } else {
+                        updateStatus('connected', 'Connected');
                     }
                 };
 
