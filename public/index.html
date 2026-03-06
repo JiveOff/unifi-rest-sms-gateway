@@ -415,7 +415,8 @@
             connectBtn.disabled = true;
 
             try {
-                ws = new WebSocket('ws://localhost:3000/messages/monitor');
+                const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+                ws = new WebSocket(`${wsProtocol}//${location.host}/messages/monitor`);
 
                 ws.onopen = () => {
                     updateStatus('connecting', 'Authenticating...');
