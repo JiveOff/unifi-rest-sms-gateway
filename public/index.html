@@ -416,7 +416,7 @@
 
             try {
                 const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-                ws = new WebSocket(`${wsProtocol}//${location.host}/messages/monitor`);
+                ws = new WebSocket(`${wsProtocol}//${location.host}/ws`);
 
                 ws.onopen = () => {
                     updateStatus('connecting', 'Authenticating...');

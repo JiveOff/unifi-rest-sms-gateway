@@ -36,12 +36,13 @@ if (appEnv.ENABLE_WEB_UI) {
       indexHTML: true
     }),
   );
+  app.get("/", ({ redirect }) => redirect("/index.html"));
   consola.info("📄 Web UI enabled at /");
 }
 
 // WebSocket endpoint for real-time SMS monitoring (uses message-based auth, not HTTP headers)
 // Client must send authentication message first: { "type": "auth", "apiKey": "YOUR_KEY" }
-app.ws("/messages/monitor", websocketHandler);
+app.ws("/ws", websocketHandler);
 
 // Apply API key authentication to REST API routes only
 app
