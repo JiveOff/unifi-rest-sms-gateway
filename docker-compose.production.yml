@@ -1,9 +1,6 @@
 services:
   sms-gateway:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: unifi-sms-gateway
+    image: ghcr.io/jiveoff/unifi-rest-sms-gateway:latest
     restart: unless-stopped
     environment:
       - SSH_HOST=${SSH_HOST}
