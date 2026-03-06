@@ -33,6 +33,7 @@ if (appEnv.ENABLE_WEB_UI) {
     staticPlugin({
       assets: "public",
       prefix: "/",
+      indexHTML: true
     }),
   );
   consola.info("📄 Web UI enabled at /");
